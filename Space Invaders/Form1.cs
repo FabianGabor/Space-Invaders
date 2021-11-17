@@ -1,16 +1,21 @@
+using System.Collections;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace Space_Invaders
 {
     public partial class Form1 : Form
-    {   
+    {
+        private const bool DEBUG = false;
+
         private bool goLeft, goRight;
         private int spaceshipSpeed = 5;
 
         private int alienSpeed;
         private int alienBulletTimer;
         private Aliens aliens;
-        
+
+        private static int[] aliensRowCount = new int[Aliens.COLUMNS];
 
         private int score = 0;
         private bool isShooting;
@@ -24,8 +29,8 @@ namespace Space_Invaders
 
         private void GameSetup()
         {
-            //FormBorderStyle = FormBorderStyle.None;
-            //WindowState = FormWindowState.Maximized;
+            FormBorderStyle = FormBorderStyle.None;
+            WindowState = FormWindowState.Maximized;
 
             score = 0;
             scorePoints.Text = score.ToString();
@@ -33,8 +38,14 @@ namespace Space_Invaders
             alienBulletTimer = Aliens.ALIENBULLETTIMER;
             alienSpeed = Aliens.ALIENSPEED;
             isShooting = false;            
-            MakeInvadersMatrix();
+            MakeInvaders();
             spaceship.Left = (panelGameBoard.Width - spaceship.Width) / 2;
+            panelGameBoard.Controls.Add(spaceship);
+
+            Console.WriteLine(panelGameBoard.Top);
+            labelPanelCoords.Text = panelGameBoard.Top.ToString();
+                
+
             gameTimer.Start();
         }
 
@@ -56,7 +67,7 @@ namespace Space_Invaders
             {
                 if (control is PictureBox)
                 {                    
-                    if ((Tags)control.Tag == Tags.laser || (Tags)control.Tag == Tags.laserAlien)
+                    if (control.Tag != null && !control.Tag.GetType().Equals(typeof(Property)) && ((Tags)control.Tag == Tags.laser || (Tags)control.Tag == Tags.laserAlien))
                     {
                         panelGameBoard.Controls.Remove(control);
                     }
@@ -66,21 +77,29 @@ namespace Space_Invaders
 
         private void MakeBullet(Tags laserTag)
         {
-            PictureBox laser = new PictureBox();
-            laser.Image = Properties.Resources.laser;
-            laser.Size = new Size(5, 20);
-            laser.Tag = laserTag;
-            laser.Left = spaceship.Left + spaceship.Width / 2;
+            PictureBox laser = new()
+            {
+                Image = Properties.Resources.laser,
+                Size = new Size(5, 20),
+                Tag = laserTag,
+                Left = spaceship.Left + spaceship.Width / 2
+            };
 
             if ((Tags)laser.Tag == Tags.laser)
             {
                 laser.Top = spaceship.Top - laser.Size.Height;
-            } else if ((Tags)laser.Tag == Tags.laserAlien)
+            } 
+            else if ((Tags)laser.Tag == Tags.laserAlien)
             {
-                // TODO generate arrays of bottom aliens and select 1 random from those
+                int random;
+                do
+                {
+                    random = new Random().Next(0, aliensRowCount.Length);
+                } while (aliensRowCount[random] == 0);
 
-                int randomX = new Random().Next(Aliens.ROWS);
-                int randomY = new Random().Next(Aliens.COLUMNS);
+                int randomY = random;
+                int randomX = aliensRowCount[randomY]-1;
+
                 laser.Left = aliens.grid[randomX, randomY].Left + (aliens.grid[randomX, randomY].Width / 2);
                 laser.Top = aliens.grid[randomX, randomY].Top + (aliens.grid[randomX, randomY].Height);
             }
@@ -89,34 +108,17 @@ namespace Space_Invaders
             laser.BringToFront();
         }
 
-        private void MakeInvadersMatrix()
-        {
+        private void MakeInvaders()
+        {            
             this.aliens = new Aliens();
-            aliens.grid = new PictureBox[Aliens.ROWS, Aliens.COLUMNS];            
-            
-            int top = 0;
+            this.aliens.CreateAliens(panelGameBoard);
 
-            for (int i = 0; i < Aliens.ROWS; i++)
-            {
-                int left = (panelGameBoard.Width - Aliens.ALIENGROUPWIDTH) / 2;
+            foreach (var alien in this.aliens.grid)
+                panelGameBoard.Controls.Add(alien);
 
-                for (int j = 0; j < Aliens.COLUMNS; j++)
-                {
-
-                    aliens.grid[i,j] = new PictureBox
-                    {
-                        Size = new Size(60, 45),
-                        Margin = new Padding(Aliens.ALIENMARGIN),
-                        Image = Properties.Resources.alien,
-                        SizeMode = PictureBoxSizeMode.Zoom,
-                        Top = top,
-                        Left = left,
-                        Tag = Tags.alien
-                    };
-                    panelGameBoard.Controls.Add(aliens.grid[i,j]);
-                    left += aliens.grid[i,j].Size.Width + Aliens.ALIENMARGIN;
-                }
-                top += aliens.grid[i, 0].Size.Height + Aliens.ALIENMARGIN;
+            for (int j = 0; j < Aliens.COLUMNS; j++)
+            {   
+                aliensRowCount[j] = Aliens.ROWS;
             }
         }
 
@@ -154,7 +156,9 @@ namespace Space_Invaders
             if (alienBulletTimer < 1)
             {
                 alienBulletTimer = Aliens.ALIENBULLETTIMER;
-                MakeBullet(Tags.laserAlien);
+
+                if (!DEBUG)
+                    MakeBullet(Tags.laserAlien);
             }
             else
             {
@@ -165,7 +169,7 @@ namespace Space_Invaders
             
             foreach (Control control in panelGameBoard.Controls)
             {
-                if (control is PictureBox && control.Tag != null && (Tags)control.Tag == Tags.alien)
+                if (control is PictureBox && control.Tag != null && control.Tag.GetType().Equals(typeof(Property)) && (control.Tag as Property).tag == Tags.alien)
                 {
                     
                     if (control.Bounds.IntersectsWith(spaceship.Bounds))
@@ -173,11 +177,10 @@ namespace Space_Invaders
                         GameOver("You died!");
                     }
                     
-
-                    
+                    /*
                     foreach (Control control2 in panelGameBoard.Controls)
                     {
-                        if (control2 is PictureBox && control2.Tag != null && ((Tags)control2.Tag) == Tags.laser)
+                        if (control2 is PictureBox && control2.Tag != null && !control2.Tag.GetType().Equals(typeof(Property)) && ((Tags)control2.Tag) == Tags.laser)
                         {
                             if (control2.Bounds.IntersectsWith(control.Bounds))
                             {
@@ -188,26 +191,29 @@ namespace Space_Invaders
                             }
                         }
                     }
+                    */
                     
                 }
 
 
-                
-                if (control is PictureBox && control.Tag != null && ((Tags)control.Tag) == Tags.laser)
+                /*
+                if (control is PictureBox && control.Tag != null && !control.Tag.GetType().Equals(typeof(Property)) && ((Tags)control.Tag) == Tags.laser)
                 {
                     control.Top += 10;
+                    labelLaserCoords.Text = control.Top.ToString();
 
+                    // TODO fix coords
                     if (control.Top < panelGameBoard.Top)
                     {
                         panelGameBoard.Controls.Remove(control);
                         isShooting = false;
                     }
                 }
-                
+                */
                 
 
                 
-                if (control is PictureBox && control.Tag != null && ((Tags)control.Tag) == Tags.laserAlien)
+                if (control is PictureBox && control.Tag != null && !control.Tag.GetType().Equals(typeof(Property)) && ((Tags)control.Tag) == Tags.laserAlien)
                 {
                     control.Top += 10;
 
@@ -225,14 +231,15 @@ namespace Space_Invaders
             }
 
 
-            //animating the bullets and removing them when the have left the scene
+            //animating the bullets
             foreach (Control y in panelGameBoard.Controls)
             {
-                if (y is PictureBox && y.Tag != null && (Tags)y.Tag == Tags.laser)
+                if (y is PictureBox && y.Tag != null && !y.Tag.GetType().Equals(typeof(Property)) && ((Tags)y.Tag) == Tags.laser)
                 {
                     y.Top -= 20;
+                    labelLaserCoords.Text = y.Top.ToString();
 
-                    if (((PictureBox)y).Top < 0)
+                    if (((PictureBox)y).Top < 1)
                     {
                         panelGameBoard.Controls.Remove(y);
                         isShooting = false;
@@ -247,18 +254,20 @@ namespace Space_Invaders
             foreach (Control i in panelGameBoard.Controls)
             {
                 foreach (Control j in panelGameBoard.Controls)
-                {
-                    if (i is PictureBox && i.Tag != null && (Tags)i.Tag == Tags.alien)
+                {   
+                    if (i is PictureBox && i.Tag != null && i.Tag.GetType().Equals(typeof(Property)) && ((Property)i.Tag).tag == Tags.alien)
                     {
-                        if (j is PictureBox && j.Tag != null && (Tags)j.Tag == Tags.laser)
+                        if (j is PictureBox && j.Tag != null && !j.Tag.GetType().Equals(typeof(Property)) && ((Tags)j.Tag) == Tags.laser)
                         {
 
                             if (i.Bounds.IntersectsWith(j.Bounds))
-                            {
+                            {                                
                                 score++;
-                                panelGameBoard.Controls.Remove(i);
+                                panelGameBoard.Controls.Remove(i);                                
                                 panelGameBoard.Controls.Remove(j);
                                 isShooting = false;
+                                
+                                aliensRowCount[((Property)i.Tag).col]--;                                
                             }
                         }
                     }
