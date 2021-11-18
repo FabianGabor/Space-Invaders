@@ -9,7 +9,7 @@ namespace Space_Invaders
         private const bool DEBUG = false;
 
         private bool goLeft, goRight;
-        private int spaceshipSpeed = 5;
+        private int spaceshipSpeed = 10;
 
         private int alienSpeed;
         private int alienBulletTimer;
@@ -35,10 +35,14 @@ namespace Space_Invaders
             FormBorderStyle = FormBorderStyle.None;
             WindowState = FormWindowState.Maximized;
 
+            panelEndgame.Visible = false;
+            labelEndgame.Visible = false;
+
             panelGameBoard.Location = new Point(
                 this.ClientSize.Width / 2 - panelGameBoard.Size.Width / 2,
                 this.ClientSize.Height / 2 - panelGameBoard.Size.Height / 2);
             panelGameBoard.Anchor = AnchorStyles.None;
+            panelGameBoard.BackColor = Color.Black;
 
             panelGameBoard.Controls.Add(scoreLabel);
             panelGameBoard.Controls.Add(scorePoints);
@@ -60,11 +64,31 @@ namespace Space_Invaders
             gameTimer.Start();
         }
 
-        private void GameOver(String msg)
+        private void GameOver(bool victory)
         {
             isGameOver = true;
             gameTimer.Stop();
-            scorePoints.Text = score.ToString() + " " + msg;
+            //RemoveAll();
+
+            panelEndgame.Visible = true;
+            labelEndgame.Visible = true;
+
+            if (victory)
+            {
+                EndgameSplash("Victory!", Color.Lime);
+            }
+            else
+            {
+                EndgameSplash("Invaded!", Color.Red);
+            }            
+        }
+
+        private void EndgameSplash(String msg, Color c)
+        {
+            panelEndgame.Enabled = true;
+            labelEndgame.Text = msg;
+            labelEndgame.Enabled = true;
+            labelEndgame.ForeColor = c;
         }
 
         private void RemoveAll()
@@ -156,6 +180,152 @@ namespace Space_Invaders
             }
         }
 
+        private FarLeftRightAlien GetFarLeftRightAlien()
+        {
+            int farLeftAlien;
+            int farRightAlien;
+
+            int left = 0;
+            while(left < aliensRowCount.Length && aliensRowCount[left] == 0)
+            {
+                left++;
+            }
+            farLeftAlien = aliens.grid[0, left].Left;
+
+            int right= aliensRowCount.Length - 1;
+            while (right > 0 && aliensRowCount[right] == 0)
+            {
+                right++;
+            }
+            farRightAlien = aliens.grid[0, right].Right;
+
+
+            return new FarLeftRightAlien(farLeftAlien, farRightAlien);
+        }
+
+        private void CheckCollisionAlien(Control control)
+        {
+            if (control is PictureBox && control.Tag != null && control.Tag.GetType().Equals(typeof(Property)) && (control.Tag as Property).tag == Tags.alien)
+            {
+                if (control.Bounds.IntersectsWith(spaceship.Bounds))
+                {
+                    GameOver(false);
+                }
+            }
+        }
+
+        private void CheckAliensLocation()
+        {
+            FarLeftRightAlien farLeftRightAlien = GetFarLeftRightAlien();
+            int farLeftAlien = farLeftRightAlien.farLeftAlien;
+            int farRightAlien = farLeftRightAlien.farRightAlien;
+            {
+                if (farRightAlien > panelGameBoard.Width)
+                {
+                    moveAlienLeft = true;
+                    moveAlienRight = false;
+                    moveAlienDown = true;
+                }
+                if (farLeftAlien < 0)
+                {
+                    moveAlienLeft = false;
+                    moveAlienRight = true;
+                    moveAlienDown = true;
+                }
+            }
+        }
+
+        private void CheckAliensLocation(Control control)
+        {
+            if (control is PictureBox && control.Tag != null && control.Tag.GetType().Equals(typeof(Property)) && (control.Tag as Property).tag == Tags.alien)
+            {
+                if (((PictureBox)control).Right > panelGameBoard.Width)
+                {
+                    moveAlienLeft = true;
+                    moveAlienRight = false;
+                    moveAlienDown = true;
+                }
+                if (((PictureBox)control).Left < 0)
+                {
+                    moveAlienLeft = false;
+                    moveAlienRight = true;
+                    moveAlienDown = true;
+                }
+            }
+        }
+
+        private void MoveAliens(Control control)
+        {
+            if (control is PictureBox && control.Tag != null && control.Tag.GetType().Equals(typeof(Property)) && (control.Tag as Property).tag == Tags.alien)
+            {
+                if (moveAlienDown) ((PictureBox)control).Top += ((PictureBox)control).Height + Aliens.ALIENMARGIN;
+                if (moveAlienLeft) ((PictureBox)control).Left -= alienSpeed;
+                if (moveAlienRight) ((PictureBox)control).Left += alienSpeed;
+            }
+        }
+
+        private void AnimateAlienLaser(Control control)
+        {
+            if (control is PictureBox && control.Tag != null && !control.Tag.GetType().Equals(typeof(Property)) && ((Tags)control.Tag) == Tags.laserAlien)
+            {
+                control.Top += 10;
+
+                if (control.Top > panelGameBoard.Bottom)
+                {
+                    panelGameBoard.Controls.Remove(control);
+                }                
+            }
+        }
+
+        private void CheckAlienLaserCollision(Control control)
+        {
+            if (control is PictureBox && control.Tag != null && !control.Tag.GetType().Equals(typeof(Property)) && ((Tags)control.Tag) == Tags.laserAlien)
+            {
+                if (control.Bounds.IntersectsWith(spaceship.Bounds))
+                {
+                    panelGameBoard.Controls.Remove(control);
+                    GameOver(false);
+                }
+            }
+        }
+
+        private void AnimateSpaceShipLaser(Control control)
+        {
+            if (control is PictureBox && control.Tag != null && !control.Tag.GetType().Equals(typeof(Property)) && ((Tags)control.Tag) == Tags.laser)
+            {
+                control.Top -= 20;
+                if (DEBUG) labelLaserCoords.Text = control.Top.ToString();
+
+                if (((PictureBox)control).Top < 1)
+                {
+                    panelGameBoard.Controls.Remove(control);
+                    isShooting = false;
+                }
+
+            }
+        }
+
+        private void CheckLaserCollision(Control control)
+        {
+            if (control is PictureBox && control.Tag != null && !control.Tag.GetType().Equals(typeof(Property)) && ((Tags)control.Tag) == Tags.laser)
+            {
+                foreach (Control controlAlien in panelGameBoard.Controls)
+                {
+                    if (controlAlien is PictureBox && controlAlien.Tag != null && controlAlien.Tag.GetType().Equals(typeof(Property)) && ((Property)controlAlien.Tag).tag == Tags.alien)
+                    {
+                        if (controlAlien.Bounds.IntersectsWith(control.Bounds))
+                        {
+                            score++;
+                            panelGameBoard.Controls.Remove(controlAlien);
+                            panelGameBoard.Controls.Remove(control);
+                            isShooting = false;
+                            aliensRowCount[((Property)controlAlien.Tag).col]--;
+                        }
+                    }
+                }
+            }
+        }
+
         private void GameTimerEvent(object sender, EventArgs e)
         {
             if (DEBUG)
@@ -164,12 +334,11 @@ namespace Space_Invaders
                 labelPanel.Text = panelGameBoard.Left.ToString() + " " + panelGameBoard.Top.ToString() + " " + panelGameBoard.Right.ToString() + " " + panelGameBoard.Bottom.ToString();
             }
 
-            
             scorePoints.Text = score.ToString();
             if (goLeft) spaceship.Left -= spaceshipSpeed;
             if (goRight) spaceship.Left += spaceshipSpeed;
 
-            
+
             if (alienBulletTimer < 1)
             {
                 alienBulletTimer = Aliens.ALIENBULLETTIMER;
@@ -179,113 +348,28 @@ namespace Space_Invaders
             }
             else
             {
-                alienBulletTimer -= 10;                
+                alienBulletTimer -= 10;
             }
 
-
-
+            CheckAliensLocation();
             foreach (Control control in panelGameBoard.Controls)
             {
-                if (control is PictureBox && control.Tag != null && control.Tag.GetType().Equals(typeof(Property)) && (control.Tag as Property).tag == Tags.alien)
-                {
-                    if (control.Bounds.IntersectsWith(spaceship.Bounds))
-                    {
-                        GameOver("You died!");
-                    }
-
-                    if (((PictureBox)control).Right > panelGameBoard.Width)
-                    {
-                        moveAlienLeft = true;
-                        moveAlienRight = false;
-                        moveAlienDown = true;
-                    }
-                    if (((PictureBox)control).Left < 0)
-                    {
-                        moveAlienLeft = false;
-                        moveAlienRight = true;
-                        moveAlienDown = true;
-                    }
-                }
-            }
-
-            foreach (Control control in panelGameBoard.Controls)
-            {
-                if (control is PictureBox && control.Tag != null && !control.Tag.GetType().Equals(typeof(Property)) && ((Tags)control.Tag) == Tags.laserAlien)
-                {
-                    control.Top += 10;
-
-                    if (control.Top > panelGameBoard.Bottom)
-                    {
-                        panelGameBoard.Controls.Remove(control);                        
-                    }
-                    if (control.Bounds.IntersectsWith(spaceship.Bounds))
-                    {
-                        panelGameBoard.Controls.Remove(control);
-                        GameOver("You died!");
-                    }
-                }
-                
-            }
-
-            foreach (Control control in panelGameBoard.Controls)
-            {
-                if (control is PictureBox && control.Tag != null && control.Tag.GetType().Equals(typeof(Property)) && (control.Tag as Property).tag == Tags.alien)
-                {   
-                    if (moveAlienDown) ((PictureBox)control).Top += ((PictureBox)control).Height + Aliens.ALIENMARGIN;
-                    if (moveAlienLeft) ((PictureBox)control).Left -= Aliens.ALIENSPEED;
-                    if (moveAlienRight) ((PictureBox)control).Left += Aliens.ALIENSPEED;                    
-                }
+                //CheckAliensLocation(control);
+                CheckCollisionAlien(control);                
+                AnimateAlienLaser(control);
+                CheckAlienLaserCollision(control);                
+                AnimateSpaceShipLaser(control);
+                CheckLaserCollision(control);
+                MoveAliens(control);
             }
             moveAlienDown = false;
 
-            //animating the bullets
-            foreach (Control control in panelGameBoard.Controls)
-            {
-                if (control is PictureBox && control.Tag != null && !control.Tag.GetType().Equals(typeof(Property)) && ((Tags)control.Tag) == Tags.laser)
-                {
-                    control.Top -= 20;
-                    if (DEBUG) labelLaserCoords.Text = control.Top.ToString();
-
-                    if (((PictureBox)control).Top < 1)
-                    {
-                        panelGameBoard.Controls.Remove(control);
-                        isShooting = false;
-                    }
-                    
-                }
-            }
-            // end of animating the bullets. 
-
-
-            // bullet and enemy collision start            
-            foreach (Control i in panelGameBoard.Controls)
-            {
-                foreach (Control j in panelGameBoard.Controls)
-                {   
-                    if (i is PictureBox && i.Tag != null && i.Tag.GetType().Equals(typeof(Property)) && ((Property)i.Tag).tag == Tags.alien)
-                    {
-                        if (j is PictureBox && j.Tag != null && !j.Tag.GetType().Equals(typeof(Property)) && ((Tags)j.Tag) == Tags.laser)
-                        {
-
-                            if (i.Bounds.IntersectsWith(j.Bounds))
-                            {                                
-                                score++;
-                                panelGameBoard.Controls.Remove(i);                                
-                                panelGameBoard.Controls.Remove(j);
-                                isShooting = false;
-                                
-                                aliensRowCount[((Property)i.Tag).col]--;                                
-                            }
-                        }
-                    }
-                }
-            }
-            
+            alienSpeed = Aliens.ALIENSPEED + score / (Aliens.ROWS * Aliens.COLUMNS / 2);
 
             if (score == aliens.grid.Length)
             {
-                GameOver("You won!");
-            }            
+                GameOver(true);
+            }
         }
     }
 }

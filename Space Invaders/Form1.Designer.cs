@@ -38,7 +38,10 @@
             this.labelLaserCoords = new System.Windows.Forms.Label();
             this.labelMouse = new System.Windows.Forms.Label();
             this.labelPanel = new System.Windows.Forms.Label();
+            this.panelEndgame = new System.Windows.Forms.Panel();
+            this.labelEndgame = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.spaceship)).BeginInit();
+            this.panelEndgame.SuspendLayout();
             this.SuspendLayout();
             // 
             // spaceship
@@ -101,7 +104,7 @@
             // 
             this.labelLaserCoords.AutoSize = true;
             this.labelLaserCoords.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            this.labelLaserCoords.Location = new System.Drawing.Point(12, 24);
+            this.labelLaserCoords.Location = new System.Drawing.Point(0, 12);
             this.labelLaserCoords.Name = "labelLaserCoords";
             this.labelLaserCoords.Size = new System.Drawing.Size(0, 15);
             this.labelLaserCoords.TabIndex = 2;
@@ -110,7 +113,7 @@
             // 
             this.labelMouse.AutoSize = true;
             this.labelMouse.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            this.labelMouse.Location = new System.Drawing.Point(12, 39);
+            this.labelMouse.Location = new System.Drawing.Point(0, 27);
             this.labelMouse.Name = "labelMouse";
             this.labelMouse.Size = new System.Drawing.Size(0, 15);
             this.labelMouse.TabIndex = 3;
@@ -119,10 +122,37 @@
             // 
             this.labelPanel.AutoSize = true;
             this.labelPanel.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            this.labelPanel.Location = new System.Drawing.Point(12, 54);
+            this.labelPanel.Location = new System.Drawing.Point(0, 42);
             this.labelPanel.Name = "labelPanel";
             this.labelPanel.Size = new System.Drawing.Size(0, 15);
             this.labelPanel.TabIndex = 4;
+            // 
+            // panelEndgame
+            // 
+            this.panelEndgame.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.panelEndgame.Controls.Add(this.labelEndgame);
+            this.panelEndgame.Controls.Add(this.labelPanel);
+            this.panelEndgame.Controls.Add(this.labelMouse);
+            this.panelEndgame.Controls.Add(this.labelLaserCoords);
+            this.panelEndgame.Location = new System.Drawing.Point(12, 9);
+            this.panelEndgame.Name = "panelEndgame";
+            this.panelEndgame.Size = new System.Drawing.Size(1880, 1020);
+            this.panelEndgame.TabIndex = 5;
+            // 
+            // labelEndgame
+            // 
+            this.labelEndgame.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelEndgame.AutoSize = true;
+            this.labelEndgame.Font = new System.Drawing.Font("Impact", 72F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.labelEndgame.ForeColor = System.Drawing.Color.Lime;
+            this.labelEndgame.Location = new System.Drawing.Point(760, 367);
+            this.labelEndgame.Name = "labelEndgame";
+            this.labelEndgame.Size = new System.Drawing.Size(400, 117);
+            this.labelEndgame.TabIndex = 5;
+            this.labelEndgame.Text = "VICTORY!";
+            this.labelEndgame.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // Form1
             // 
@@ -130,9 +160,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(1904, 1041);
-            this.Controls.Add(this.labelPanel);
-            this.Controls.Add(this.labelMouse);
-            this.Controls.Add(this.labelLaserCoords);
+            this.Controls.Add(this.panelEndgame);
             this.Controls.Add(this.labelPanelCoords);
             this.Controls.Add(this.panelGameBoard);
             this.Name = "Form1";
@@ -140,6 +168,8 @@
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.KeyIsDown);
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.KeyIsUp);
             ((System.ComponentModel.ISupportInitialize)(this.spaceship)).EndInit();
+            this.panelEndgame.ResumeLayout(false);
+            this.panelEndgame.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -157,5 +187,7 @@
         private Label labelLaserCoords;
         private Label labelMouse;
         private Label labelPanel;
+        private Panel panelEndgame;
+        private Label labelEndgame;
     }
 }
