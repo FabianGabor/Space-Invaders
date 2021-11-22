@@ -10,6 +10,6 @@ namespace Space_Invaders
     {
         alien,
         laser,
-        laserAlien        
+        laserAlien
     }
 }

@@ -8,6 +8,7 @@ namespace Space_Invaders
 {
     internal class Alien
     {
+        /*
         public PictureBox pictureBox;
         public int row;
         public int col;
@@ -15,5 +16,6 @@ namespace Space_Invaders
         public Alien()
         {
         }
+        */
     }
 }

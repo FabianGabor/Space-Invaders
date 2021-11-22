@@ -12,8 +12,7 @@ namespace Space_Invaders
         static void Main()
         {
             Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            //Application.Run(new Form1());
+            Application.SetCompatibleTextRenderingDefault(false);            
 
             ApplicationConfiguration.Initialize();
             Application.Run(new Form1());

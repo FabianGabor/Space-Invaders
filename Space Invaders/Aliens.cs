@@ -17,7 +17,7 @@ namespace Space_Invaders
         public const int ALIENMARGIN = 30;        
         public const int ALIENGROUPWIDTH = 960;
         
-        public PictureBox[,] grid;        
+        public PictureBox[,] grid;
 
         public Aliens()
         {
@@ -42,10 +42,10 @@ namespace Space_Invaders
                         Top = top,
                         Left = left,
                         Tag = new Property(Tags.alien, i, j)
-                };                                       
-                    left += grid[i, j].Size.Width + ALIENMARGIN;                    
+                    };                                       
+                    left += grid[i, j].Size.Width + ALIENMARGIN;
                 }
-                top += grid[i, 0].Size.Height + ALIENMARGIN;                
+                top += grid[i, 0].Size.Height + ALIENMARGIN;
             }
         }        
     }
